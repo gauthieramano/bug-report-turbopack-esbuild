@@ -25,6 +25,22 @@ type Props = Readonly<{
 export default function RootLayout({ children }: Props) {
   return (
     <html lang="en">
+      <head>
+        {/* Map bare specifiers to ESM URLs */}
+        <script
+          type="importmap"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: Load ESM
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              imports: {
+                // To avoid Runtime TypeError: Failed to resolve module specifier "react/jsx-runtime". Relative references must start with either "/", "./", or "../".
+                "react/jsx-runtime": "https://esm.sh/react@19.1.0/jsx-runtime",
+              },
+            }),
+          }}
+        />
+      </head>
+
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
