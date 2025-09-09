@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Issue
 
-## Getting Started
+- https://github.com/vercel/next.js/issues/83630
 
-First, run the development server:
+# Bug description
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Importing `esbuild` inside **Server Components** and **Route Handlers** results in a **Build error**, even declaring it in `serverExternalPackages`.
+
+## To reproduce the issue:
+
+Building the app with **Turbopack** like so:
+
+```sh
+npm i
+npx next build --turbopack
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+fails with this message:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+> Build error occurred
+[Error: Turbopack build failed with 1 errors:
+./node_modules/@esbuild/darwin-x64/bin/esbuild
+Reading source code for parsing failed
+An unexpected error happened while trying to read the source code to parse: failed to convert rope into string
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Caused by:
+- invalid utf-8 sequence of 1 bytes from index 0
+```
 
-## Learn More
+contrary to building the app without **Turbopack**, like so:
 
-To learn more about Next.js, take a look at the following resources:
+```sh
+npx next build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+In development mode:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```sh
+npx next dev --turbopack
+```
 
-## Deploy on Vercel
+everything works fine.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## To investigate
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Everything related to the issue is included only in the last commit:
+
+> feat(app & next.config.ts): ✨ fetch JSX from string using esbuild
+
+## Notes:
+
+- This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+- The functioning build without **Turbopack** was deployed here:\
+  https://bug-report-turbopack-esbuild.vercel.app/
+
+- This repository was created only to report this bug. So the codebase was made as minimalistic as possible and the purpose is not to discuss a way to avoid using `esbuild`, except if there's a better way _(via another package for instance)_ to transpile a string _(with the content of a JSX file)_ into a ESM.\
+  In a real-world application, there's a genuine interest having to transpile a JSX file _(stored as a string in a DB for instance)_ into a ESM that can be imported in a Client Component.
+
+# Questions
+
+### 1. `serverExternalPackages` in `next.config.ts`
+
+To avoid a **Build Error** in the **Route Handler**, I set the file like so:
+
+```ts
+const nextConfig: NextConfig = {
+  serverExternalPackages: ["esbuild"],
+};
+```
+
+but maybe there's a better configuration.\
+If so, I would like to know what would be the proper one.
+
+### 2. `webpackIgnore` in `page.tsx`
+
+To avoid a **Build Error** in the **Client Component**, I put `/* webpackIgnore: true */` before the module path in the import call, like so:
+
+```tsx
+// prettier-ignore
+const fetchedModule = await import(
+  /* webpackIgnore: true */ modulePath
+)
+```
+
+I'm wondering if there would be a better way to do so.\
+If not, at least, it would be good to rename `webpackIgnore` and to avoid having to put `: true` for a concise syntax.
