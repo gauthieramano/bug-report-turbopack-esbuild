@@ -2,9 +2,17 @@
 
 - https://github.com/vercel/next.js/issues/83630
 
+# Bug fixed on `next@16.0.0-canary.13`
+
+- https://github.com/vercel/next.js/issues/83630#issuecomment-3419065048
+
+Everything related to the issue is fixed via this commit:
+
+> fix(package.json): 🐛 bump next to 16.0.0-canary.14 to avoid build error
+
 # Bug description
 
-Importing `esbuild` inside **Server Components** and **Route Handlers** results in a **Build error**, even declaring it in `serverExternalPackages`.
+With `next@15.5.2`, importing `esbuild` inside **Server Components** and **Route Handlers** results in a **Build error**, even declaring it in `serverExternalPackages`.
 
 ## To reproduce the issue:
 
@@ -44,7 +52,7 @@ everything works fine.
 
 ## To investigate
 
-Everything related to the issue is included only in the last commit:
+Everything related to the issue is included only in this commit:
 
 > feat(app & next.config.ts): ✨ fetch JSX from string using esbuild
 
